@@ -27,6 +27,7 @@ pfUI:RegisterModule("paladinbar", "vanilla", function()
     seal        = "",                                  -- active seal (spell name)
     judgeseal   = "",                                  -- seal used by the Judgement button (spell name)
     judgefirst  = "1",                                 -- Judgement button casts the chosen seal first if it is not up
+    judgecheck  = "1",                                 -- skip Judgement when its debuff is already on the target
     order       = "aura,libram,seal,judgement",        -- bar order
     enable_libram = "1",
     hidestances = "1",                                 -- hide pfUI's stance bar (it lists the paladin auras)
@@ -338,10 +339,35 @@ pfUI:RegisterModule("paladinbar", "vanilla", function()
 
   -- Judgement: with "cast chosen seal first" the click casts the chosen seal when it
   -- is not up on you, otherwise (or when the option is off) the Judgement itself.
+  -- seals whose judgement leaves no debuff on the target (never checked)
+  local NODEBUFF_TEXTURES = {
+    ["ability_thunderbolt"] = true,          -- Righteousness (damage only)
+    ["ability_warrior_innerrage"] = true,    -- Command (damage only)
+  }
+
+  local function TargetHasDebuff(entry)
+    if not entry or not entry.licon or not UnitExists("target") then return nil end
+    for i = 1, 40 do
+      local tex = UnitDebuff("target", i)
+      if not tex then break end
+      if string.lower(tex) == entry.licon then return true end
+    end
+    return nil
+  end
+
+  -- true when Judgement would be wasted: the chosen seal's judgement debuff is
+  -- already on the target (only checked when that seal is, or will be, the one used)
+  local function JudgementApplied(seal, fresh)
+    if cfg.judgecheck ~= "1" or not seal or NODEBUFF_TEXTURES[ShortTexture(seal.icon)] then return nil end
+    if cfg.judgefirst ~= "1" and not IsUp(seal, fresh) then return nil end
+    return TargetHasDebuff(seal)
+  end
+
   local function Judge()
     local judgement = GetActive("judgement")
     if not judgement then return end
     local seal = GetJudgeSeal()
+    if JudgementApplied(seal, true) then return end   -- debuff already on the target
     if cfg.judgefirst == "1" and seal and not IsUp(seal, true) then
       Cast(seal)
     else
@@ -838,7 +864,8 @@ pfUI:RegisterModule("paladinbar", "vanilla", function()
             b.secshowing = nil
             b.secframe:Hide()
           end
-          SetIconTint(b, entry, true)
+          -- dimmed while the debuff is already on the target (nothing to judge)
+          SetIconTint(b, entry, not JudgementApplied(seal))
           SetTimerText(b, nil, nil)
         else
           -- aura / seal: dimmed while it is not up on you
@@ -1061,6 +1088,7 @@ pfUI:RegisterModule("paladinbar", "vanilla", function()
 
       CreateConfig(nil, T["Judgement"], nil, nil, "header")
       CreateConfig(update, T["Cast The Chosen Seal First If It Is Not Up"], cfg, "judgefirst", "checkbox")
+      CreateConfig(update, T["Skip Judgement If Its Debuff Is Already On The Target"], cfg, "judgecheck", "checkbox")
 
       CreateConfig(nil, T["Libram"], nil, nil, "header")
       CreateConfig(update, T["Enable Libram Swap"], cfg, "enable_libram", "checkbox")

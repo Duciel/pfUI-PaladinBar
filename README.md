@@ -24,6 +24,10 @@ choose it (any click; the chosen one is outlined).
 With *Cast the chosen seal first if it is not up* (default on), a click casts the chosen seal when it is not
 active on you, and the next click casts Judgement. Turn it off to always cast Judgement directly.
 
+With *Skip Judgement if its debuff is already on the target* (default on), nothing is cast when the chosen
+seal's judgement (Crusader, Light, Wisdom, Justice) is already on your target, and the button is dimmed.
+Righteousness and Command are never checked, since they leave no debuff.
+
 ## Commands
 `/paladinbar` (alias `/ppb`)
 

@@ -2,6 +2,6 @@
 ## Title: |cff33ffccpf|rUI |cffffffffPaladin Bar
 ## Author: Duciel
 ## Notes: Paladin bar for pfUI: pick an aura, libram, seal and the seal used by Judgement from hover lists.
-## Version: 1.0.1
+## Version: 1.1.0
 ## Dependencies: pfUI
 paladinbar.lua
