@@ -1,0 +1,6 @@
+<Bindings>
+  <Binding name="PFPALADINBAR_AURA" header="PFPALADINBAR">pfPaladinBar.CastAura()</Binding>
+  <Binding name="PFPALADINBAR_SEAL">pfPaladinBar.CastSeal()</Binding>
+  <Binding name="PFPALADINBAR_JUDGEMENT">pfPaladinBar.Judge()</Binding>
+  <Binding name="PFPALADINBAR_LIBRAM">pfPaladinBar.EquipLibram()</Binding>
+</Bindings>
