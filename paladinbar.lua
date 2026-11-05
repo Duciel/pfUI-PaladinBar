@@ -653,7 +653,8 @@ pfUI:RegisterModule("paladinbar", "vanilla", function()
         if entry then
           b.icon:SetTexture(entry.icon)
           b.showing = entry
-          b:SetBackdropBorderColor(COLOR[el][1], COLOR[el][2], COLOR[el][3], 1)
+          -- the border is owned by the OnUpdate tick (lit / default), not set here:
+          -- setting it here made it flash on every refresh
         else
           b.icon:SetTexture(NONE_ICON)
           b.icon:SetVertexColor(1, 1, 1)
@@ -877,6 +878,14 @@ pfUI:RegisterModule("paladinbar", "vanilla", function()
     end
     this.dirty = true
   end)
+  local function LibramSig()
+    local sig = ""
+    for _, e in pairs(known.libram) do
+      sig = sig .. e.name .. ":" .. tostring(e.bag) .. ":" .. tostring(e.slot) .. "|"
+    end
+    return sig .. tostring(cfg.libram)
+  end
+
   events:SetScript("OnUpdate", function()
     if this.dirty then
       this.dirty, this.bagdirty = nil, nil
@@ -884,9 +893,22 @@ pfUI:RegisterModule("paladinbar", "vanilla", function()
       bar:UpdateConfig()
     elseif this.bagdirty then
       this.bagdirty = nil
+      -- bag events are frequent: only rebuild the bar when the librams changed
+      local before = LibramSig()
       ScanLibrams()
       if cfg.libram == "" and known.libram[1] then cfg.libram = known.libram[1].name end
-      bar:UpdateConfig()
+      if LibramSig() ~= before then bar:UpdateConfig() end
+    end
+
+    -- pfUI creates / shows its stance bar on its own schedule: keep it hidden
+    local now = GetTime()
+    if (this.stancecheck or 0) <= now then
+      this.stancecheck = now + .5
+      local stances = _G.pfActionBarStances
+      if stances and cfg.enable == "1" and cfg.hidestances == "1"
+        and (not stances.pfPaladinBarHooked or stances:IsShown()) then
+        SuppressStances()
+      end
     end
   end)
 
