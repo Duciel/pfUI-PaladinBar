@@ -363,16 +363,27 @@ pfUI:RegisterModule("paladinbar", "vanilla", function()
     return TargetHasDebuff(seal)
   end
 
+  -- real cooldown only: 1.5s or less is the global cooldown
+  local function OnCooldown(entry)
+    local start, duration = GetSpellCooldown(entry.index, BOOKTYPE_SPELL)
+    return start and start > 0 and duration and duration > 1.5
+  end
+
+  -- returns true when it cast something (the chosen seal or the Judgement),
+  -- false + a reason when it did nothing:
+  --   "unavailable" (no Judgement / feature off), "cooldown", "applied"
   local function Judge()
     local judgement = GetActive("judgement")
-    if not judgement then return end
+    if not judgement then return false, "unavailable" end
+    if OnCooldown(judgement) then return false, "cooldown" end
     local seal = GetJudgeSeal()
-    if JudgementApplied(seal, true) then return end   -- debuff already on the target
+    if JudgementApplied(seal, true) then return false, "applied" end   -- debuff already on the target
     if cfg.judgefirst == "1" and seal and not IsUp(seal, true) then
       Cast(seal)
     else
       Cast(judgement)
     end
+    return true
   end
 
   local function ParseOrder()
@@ -948,15 +959,15 @@ pfUI:RegisterModule("paladinbar", "vanilla", function()
   -- casts unless it is already up; force = always cast
   local function CastElement(el, force)
     el = el and string.lower(el)
-    if not VALID[el] or not Enabled(el) then return end
+    if not VALID[el] or not Enabled(el) then return false end
     if el == "judgement" then
-      Judge()
-      return
+      return Judge()
     end
     local entry = GetActive(el)
-    if not entry then return end
-    if not force and el ~= "libram" and IsUp(entry, true) then return end
+    if not entry then return false end
+    if not force and el ~= "libram" and IsUp(entry, true) then return false end
     Cast(entry)
+    return true
   end
 
   local function Cycle(el, dir)
@@ -986,10 +997,10 @@ pfUI:RegisterModule("paladinbar", "vanilla", function()
   end
 
   _G.pfPaladinBar.Cast = CastElement
-  _G.pfPaladinBar.CastAura = function(force) CastElement("aura", force) end
-  _G.pfPaladinBar.CastSeal = function(force) CastElement("seal", force) end
+  _G.pfPaladinBar.CastAura = function(force) return CastElement("aura", force) end
+  _G.pfPaladinBar.CastSeal = function(force) return CastElement("seal", force) end
   _G.pfPaladinBar.Judge = Judge
-  _G.pfPaladinBar.EquipLibram = function() CastElement("libram") end
+  _G.pfPaladinBar.EquipLibram = function() return CastElement("libram") end
   _G.pfPaladinBar.Next = function(el) if VALID[el] then Cycle(el, 1) end end
   _G.pfPaladinBar.Prev = function(el) if VALID[el] then Cycle(el, -1) end end
   _G.pfPaladinBar.SetActive = function(el, name)

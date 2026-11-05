@@ -40,6 +40,11 @@ Righteousness and Command are never checked, since they leave no debuff.
 | `/paladinbar set <group> <name\|none>` | e.g. `/paladinbar set judgement wisdom` |
 | `/paladinbar list` / `scan` | show the selection / rescan spellbook and bags |
 
+`pfPaladinBar.Judge()` (and `Cast`, `CastAura`, `CastSeal`, `EquipLibram`) return `true` when they cast
+something and `false` otherwise. `Judge()` also returns the reason: `"cooldown"` (Judgement on cooldown),
+`"applied"` (its debuff is already on the target) or `"unavailable"`. For example
+`/run if not pfPaladinBar.Judge() then CastSpellByName("Holy Strike") end`.
+
 Key bindings: *Key Bindings → pfUI Paladin Bar*. For scripts: `pfPaladinBar.CastAura()`, `CastSeal()`,
 `Judge()`, `EquipLibram()`, `SetActive("judgement", "wisdom")`.
 
